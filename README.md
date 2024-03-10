@@ -25,3 +25,17 @@ User Authentication: Secure login and logout functionality for admin users. Shou
 Session Management: Utilizes Gorilla Sessions for session management, providing secure user sessions.
 
 Database Operations: Leverages GORM for efficient PostgreSQL database operations, including Create and Read operations for blog entries.
+
+
+# Screenshots: 
+
+<img width="750" alt="Screenshot 2024-03-10 at 10 54 39 PM" src="https://github.com/KarinaRdk/WEB-application/assets/101858179/4507ac51-40b9-457d-9355-919f1cc8f721">
+
+<img width="749" alt="Screenshot 2024-03-10 at 10 54 51 PM" src="https://github.com/KarinaRdk/WEB-application/assets/101858179/f3676233-1366-4b2c-9427-a8ff53a06045">
+
+<img width="745" alt="Screenshot 2024-03-10 at 10 55 11 PM" src="https://github.com/KarinaRdk/WEB-application/assets/101858179/1d0bd57f-82db-49a8-a0e5-83b2807e229a">
+
+<img width="833" alt="Screenshot 2024-03-10 at 10 48 13 PM" src="https://github.com/KarinaRdk/WEB-application/assets/101858179/d784942c-3be8-4753-b86d-809d1c8d7708">
+
+<img width="810" alt="Screenshot 2024-03-10 at 10 47 40 PM" src="https://github.com/KarinaRdk/WEB-application/assets/101858179/252df704-3000-401a-afae-40f3e25e63cb">
+
