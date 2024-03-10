@@ -1,0 +1,79 @@
+* {
+    background-color: #ffffff;
+    font-family: Arial;
+}
+
+body {
+    background-color: #ffffff;
+    margin-top: 20vw;
+    margin-left: 10vw; 
+    margin-right: 10vw;
+}
+
+h1 {
+    font-size: 7vw;
+    float:left;
+    margin-bottom: 3vw;
+}
+
+h2 {
+    font-size: 3vw;
+    float:right;
+}
+
+h3 {
+    font-size: 1.5vw;
+    float:right;
+}
+
+img {
+    float:left;
+}
+
+article {
+    float:left;
+}
+
+button.btn.btn-outline-primary {
+    border-width: 2px;
+    font-size: 2vw;
+    float:right;
+    margin-bottom: 3vw;
+}
+
+a:hover {
+    color: white;
+    background: none;
+}
+
+a {
+    text-decoration: none;
+    background: none;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+/* Ensure the button itself changes color on hover */
+button.btn.btn-outline-primary:hover {
+    background-color: #007bff; 
+    color: white; 
+}
+
+/* Ensure the link inside the button changes color on hover */
+button.btn.btn-outline-primary:hover a {
+    color: white; 
+    text-decoration: none; 
+}
+
+/* This rule ensures that links not inside buttons do not change color on hover */
+a:not([class]) {
+    color: inherit; 
+}
+
+/* This rule ensures that links inside buttons do not change color on hover */
+button.btn.btn-outline-primary a:hover {
+    color: white; 
+}

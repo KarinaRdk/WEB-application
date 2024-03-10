@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html lang="en"></html>
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+      </head>
+    <body>
+      <!-- <h2><a href="/">see recent posts</a></h2> -->
+ 
+      <img src="/static/emblem.png" alt="black_circle">
+      <h1>Create a new entry</h1>
+      <form id="form_ex">
+      <div class="mb-3">
+        <input name="title" type="Title" class="form-control" id="Title" placeholder=title>
+      </div>
+      <div class="mb-3">
+        <textarea name="preview" class="form-control" id="Preview" rows="2" placeholder=preview></textarea>
+      </div>
+      <div class="mb-3">
+        <textarea name="text" class="form-control" id="Text" rows="7" placeholder="your masterpiece"></textarea>
+      </div>
+      <div class="btn-group" role="group" aria-label="outlined">
+      <button type="submit" class="btn btn-outline-primary">Save</button>
+      <button type="button" class="btn btn-outline-primary"><a href="/">see recent posts</a></button>
+      </div>
+      </form>
+      
+      <script>
+        const form = document.getElementById("form_ex")
+        form.addEventListener("submit", e => {
+          e.preventDefault()
+          const body = JSON.stringify({
+            title: form.elements.title.value,
+            preview: form.elements.preview.value,
+            text: form.elements.text.value
+          })
+
+          const saveButton = document.querySelector("button[type='submit']"); // Adjust the selector if needed
+          const originalButtonText = saveButton.textContent;
+          const originalButtonStyle = saveButton.style.cssText; // Save the original button style
+          // Change the button style to turn it green and update it's text to "Saved!"
+          saveButton.style.cssText = `background: green; color: white; border-color: green; ${originalButtonStyle}`;
+          saveButton.textContent = "Saved!";
+          console.log(body)
+          fetch("http://localhost:8080/save-data", {
+            method: "POST",
+            body: body,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }).then(res => res.json())
+          .then(resObj => {
+            // After 3 seconds, revert the button back to its original state
+        setTimeout(() => {
+            saveButton.style.cssText = originalButtonStyle; 
+            saveButton.textContent = originalButtonText;
+        }, 2000); // 
+            console.log(resObj)
+          })
+          .catch(e => {
+            console.log("error", e)
+          })
+        })
+      </script>
+</body>
+</html>
