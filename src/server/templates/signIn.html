@@ -6,7 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.0.2/sha.js"></script>
 </head>
 <body>
-    <h2><a href="/new">read recent posts</a></h2>
+    <h2><a href="/">read recent posts</a></h2>
     <img src="/static/emblem.png" alt="black_circle">
     <h1>Sign in as an admin</h1>
 <form id="form_e">
@@ -26,67 +26,65 @@
 </form>
 
 <script>
-document.getElementById("form_e").addEventListener("submit", function(event) {
-    event.preventDefault(); // Prevent the form from submitting normally
-
-    var passwordInput = document.getElementById("inputPassword3");
-    var loginInput = document.getElementById("inputlogin");
-
-    var hashObj = new jsSHA("SHA-512", "TEXT", {numRounds: 1});
-    hashObj.update(passwordInput.value);
-    var hash = hashObj.getHash("HEX");
-
-    const saveButton = document.querySelector(".btn-primary"); // Adjust the selector if needed
-    const originalButtonText = saveButton.textContent;
-    const originalButtonStyle = saveButton.style.cssText; // Save the original button style
-
-     // Change the button style to turn it green and update it's text to "Saved!"
-    saveButton.style.cssText = `background: green; color: white; border-color: green; ${originalButtonStyle}`;
-    saveButton.textContent = "Authorised!";
-
-    // Submit the form data using fetch API
-    fetch("http://localhost:8080/check", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            login: loginInput.value,
-            password: hash
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => { throw data; });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.redirectTo) {
-            window.location.href = data.redirectTo;
-        } else {
-            console.log(data);
-        }
-    })
-    setTimeout(() => {
-            saveButton.style.cssText = originalButtonStyle; 
-            saveButton.textContent = originalButtonText;
-        }, 2000); // 
-    })
-    .catch(error => {
-        if (error.error) {
-            // Display the error message to the user
-            var errorMessageElement = document.getElementById("errorMessage");
-            errorMessageElement.textContent = error.error;
-            errorMessageElement.style.display = "block";
-        } else {
-            console.error('Error:', error);
-        }
-    });
-
-
-    </script>
+    document.getElementById("form_e").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent the form from submitting normally
     
+        var passwordInput = document.getElementById("inputPassword3");
+        var loginInput = document.getElementById("inputlogin");
+    
+        var hashObj = new jsSHA("SHA-512", "TEXT", {numRounds: 1});
+        hashObj.update(passwordInput.value);
+        var hash = hashObj.getHash("HEX");
+    
+        const saveButton = document.querySelector(".btn-primary"); // Adjust the selector if needed
+        const originalButtonText = saveButton.textContent;
+        const originalButtonStyle = saveButton.style.cssText; // Save the original button style
+    
+        // Submit the form data using fetch API
+        fetch("http://localhost:8080/check", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                login: loginInput.value,
+                password: hash
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { throw data; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.redirectTo) {
+                window.location.href = data.redirectTo;
+            } else {
+                console.log(data);
+            }
+    
+            // Change the button style to turn it green and update it's text to "Authorised!"
+            saveButton.style.cssText = `background: green; color: white; border-color: green; ${originalButtonStyle}`;
+            saveButton.textContent = "Authorised!";
+    
+            setTimeout(() => {
+                saveButton.style.cssText = originalButtonStyle; 
+                saveButton.textContent = originalButtonText;
+            }, 2000); // Revert the button back to its original state after 2 seconds
+        })
+        .catch(error => {
+            if (error.error) {
+                // Display the error message to the user
+                var errorMessageElement = document.getElementById("errorMessage");
+                errorMessageElement.textContent = error.error;
+                errorMessageElement.style.display = "block";
+            } else {
+                console.error('Error:', error);
+            }
+        });
+    });
+    </script>
 
 </body>
 </html>
