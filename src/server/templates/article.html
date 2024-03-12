@@ -20,16 +20,56 @@
             <pre><p>{{.Text}}</p></pre>
         </article>
     </div>
-
+    <form id="form_ex" method="post" action="/deletePost">
         <div class="btn-group" role="group" aria-label="outlined">
             <input type="hidden" name="id" value="{{.Id}}">
             <button type="button" class="btn btn-outline-primary"> <a href="/edit?id={{$.Id}}">edit post</a></button>
             <button type="button" class="btn btn-outline-primary"> <a href="/">see recent posts</a></button>
-            <button type="button" class="btn btn-outline-primary"> <a href="/deletePost?id={{$.Id}}">delete post</a></button>
+            <button type="submit" class="btn btn-outline-primary">delete post</button>
         </form> 
         </div>
     </main>
     
+    <script>
+
+        const form = document.getElementById("form_ex")
+        form.addEventListener("submit", e => {
+        e.preventDefault();
+        const body = JSON.stringify({
+            id: form.elements.id.value,     
+              
+        })
+
+        const saveButton = document.querySelector("button[type='submit']");
+        const originalButtonText = saveButton.textContent;
+        const originalButtonStyle = saveButton.style.cssText; 
+        // Change the button style to turn it green and update it's text to "Saved!"
+        saveButton.style.cssText = `background: green; color: white; border-color: green; ${originalButtonStyle}`;
+        saveButton.textContent = "Deleted!";
+        fetch("/deletePost", {
+        method: "POST",
+        body: body,
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then(response => response.text())
+    .then(responseText => {
+        // After 3 seconds, revert the button back to its original state
+        setTimeout(() => {
+            saveButton.style.cssText = originalButtonStyle; 
+            saveButton.textContent = originalButtonText;
+        }, 2000); 
     
+        setTimeout(() => {
+            window.location.href = "/"; // Redirect to the root
+        }, 2000); // 2000 milliseconds = 2 seconds
+    })
+    .catch(e => {
+        console.log("error", e);
+    });
+    });
+
+    </script>
 </body>
 </html>
