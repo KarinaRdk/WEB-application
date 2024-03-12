@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ type Entry struct {
 	Title   string `json:"title"`
 	Preview string `json:"preview"`
 	Text    string `json:"text"`
-	Deleted bool   `gorm:"default:false" json:"-"` // Add this line
+	Deleted bool   `gorm:"default:false" json:"-"`
 }
 
 type Credentials struct {
@@ -39,7 +38,6 @@ const (
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	var entries []Entry
-	// Exclude deleted entries by adding a condition to the query
 	err := db.Model(&Entry{}).Where("deleted = ?", false).Order("id desc").Limit(3).Find(&entries).Error
 
 	if err != nil {
@@ -54,7 +52,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, nil)
 }
 
-func checkAdminHandler(w http.ResponseWriter, r *http.Request) {
+func authoriseHandler(w http.ResponseWriter, r *http.Request) {
 	input := decodeCredentials(w, r)
 	correct := savedCredentials()
 	var errorMessage string
@@ -73,21 +71,19 @@ func checkAdminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Login and password are correct")
-
 	session, _ := store.Get(r, "session-name")
 	session.Values["role"] = "Admin"
 	session.Save(r, w)
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"redirectTo": "/new"}`))
+	w.Write([]byte(`{"redirectTo": "/"}`))
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-name")
-	// Set MaxAge to -1 to delete the session
 	session.Options = &sessions.Options{MaxAge: -1}
-	// Save the session to send the updated session cookie to the client
+	for key := range session.Values {
+		delete(session.Values, key)
+	}
 	session.Save(r, w)
 }
 
@@ -118,7 +114,9 @@ func savedCredentials() (c Credentials) {
 func isAuthorised(w http.ResponseWriter, r *http.Request) (ans bool) {
 	session, _ := store.Get(r, "session-name")
 	role, ok := session.Values["role"].(string)
+	fmt.Println("Session values:", session.Values) // Debugging line
 	if !ok || role != "Admin" {
+		fmt.Println("Session values:", session.Values) // Debugging line
 		t, _ := template.ParseFiles("./templates/unauthorised.html")
 		t.Execute(w, nil)
 		return false
@@ -134,7 +132,7 @@ func newDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func saveEntryHandler(res http.ResponseWriter, req *http.Request) {
+func savePostHandler(res http.ResponseWriter, req *http.Request) {
 	var p Entry
 	err := json.NewDecoder(req.Body).Decode(&p)
 	if err != nil {
@@ -175,7 +173,6 @@ func connectDB() error {
 func articleHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	var article Entry
-	// Exclude deleted entries by adding a condition to the query
 	result := db.First(&article, "id = ? AND deleted = ?", id, false)
 	if result.Error != nil {
 		http.Error(w, "Article not found or has been deleted", http.StatusNotFound)
@@ -186,7 +183,7 @@ func articleHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, article)
 }
 
-func EditArticleHandler(w http.ResponseWriter, r *http.Request) {
+func editPostHandler(w http.ResponseWriter, r *http.Request) {
 	if !isAuthorised(w, r) {
 		return
 	}
@@ -202,58 +199,33 @@ func EditArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deletePostHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("deletePostHandler")
-	if !isAuthorised(w, r) {
-		return
-	}
-	id := r.URL.Query().Get("id")
-	fmt.Println(id)
-	var article Entry
-	result := db.First(&article, id)
-	if result.Error != nil {
-		http.Error(w, "Article not found", http.StatusNotFound)
-		return
-	}
-	t, _ := template.ParseFiles("./templates/deleteArticle.html")
-	t.Execute(w, article)
-}
 
-func softDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if the request method is POST
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	// Ensure the user is authorized
 	if !isAuthorised(w, r) {
+		http.Error(w, "not authorised", http.StatusUnauthorized)
 		return
 	}
-	// Parse the request body to get the ID of the entry to be soft deleted
-	var request struct {
-		ID string `json:"id"`
+
+	type FromFront struct {
+		Id int `json:"id,string"`
 	}
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-	// Convert the ID from string to int
-	id, err := strconv.Atoi(request.ID)
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+	var ff FromFront
+
+	if err := json.NewDecoder(r.Body).Decode(&ff); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(err)
 		return
 	}
 
 	// Perform the soft delete operation
-	result := db.Model(&Entry{}).Where("id = ?", id).Update("deleted", true)
+	result := db.Model(&Entry{}).Where("id = ?", ff.Id).Update("deleted", true)
 	if result.Error != nil {
-		http.Error(w, "Failed to soft delete entry", http.StatusInternalServerError)
+		http.Error(w, "Failed to soft delete ", http.StatusInternalServerError)
 		return
 	}
-
 	// Send a success response
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Entry soft deleted successfully!"))
+	w.Write([]byte("Soft deleted successfully!"))
+	fmt.Println("successfull")
 }
 
 func saveChangesHandler(w http.ResponseWriter, r *http.Request) {
@@ -281,23 +253,20 @@ func saveChangesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
-	mux := http.NewServeMux()
-
 	connectDB()
 
+	mux := http.NewServeMux()
 	mux.HandleFunc("/", homeHandler)
 	mux.HandleFunc("/admin/", adminHandler)
-	mux.HandleFunc("/save-data", saveEntryHandler)
-	mux.HandleFunc("/check", checkAdminHandler)
+	mux.HandleFunc("/save-data", savePostHandler)
+	mux.HandleFunc("/check", authoriseHandler)
 	mux.HandleFunc("/new", newDataHandler)
 	mux.HandleFunc("/article", articleHandler)
-	mux.HandleFunc("/edit", EditArticleHandler)
+	mux.HandleFunc("/edit", editPostHandler)
 	mux.HandleFunc("/save-changes", saveChangesHandler)
 	mux.HandleFunc("/deletePost", deletePostHandler)
-	mux.HandleFunc("/softDelete", softDeleteHandler)
-
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
+	defer logout(nil, nil)
 }
